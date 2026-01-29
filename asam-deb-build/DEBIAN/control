@@ -1,0 +1,13 @@
+Package: asam-linux-installer
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Jez <no-email@example.com>
+Depends: zenity, wine64, winbind, xrdp, openssh-server, unzip, git
+Description: ASAM Linux Installer
+ A GUI-based installer that prepares Ubuntu to run ASAM (Windows-only)
+ using Wine, XRDP, SSH, firewall automation, and systemd integration.
+ This package installs the ASAM installer suite into /opt and provides
+ a global launcher command 'asam-installer'.
+
