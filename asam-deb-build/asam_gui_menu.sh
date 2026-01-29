@@ -44,10 +44,15 @@ fi
 # -----------------------------
 
 run_root() {
-    # Run a command with sudo, showing a friendly error if it fails
-    if ! sudo bash -c "$1"; then
+    # Run a script with sudo, preserving DISPLAY for GUI dialogs
+    # Capture stderr to show error details to user
+    local output
+    output=$(sudo --preserve-env=DISPLAY,XAUTHORITY bash "$1" 2>&1)
+    local exitcode=$?
+    
+    if [[ $exitcode -ne 0 ]]; then
         zenity --error --title="ASAM Linux Installer" \
-            --text="A required privileged action failed:\n\n$1"
+            --text="Stage script failed with exit code $exitcode:\n\n$output"
         exit 1
     fi
 }
