@@ -1,37 +1,35 @@
 [Unit]
-Description=ASAM Server Manager (Wine)
-After=network-online.target network.target
+Description=ASAM Launcher Service
+After=network.target network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 
-# Run as the configured user (wizard sets INSTALL_USER)
-User=root
+# Run ASAM as a normal user (change 'jez' to whichever user should run ASAM)
+User=jez
+Group=jez
 
-# Environment for Wine
-Environment="WINEPREFIX=/root/.wine"
-Environment="WINEARCH=win64"
-Environment="PATH=/usr/bin:/bin:/usr/sbin:/sbin"
+# Working directory for ASAM
+WorkingDirectory=/opt/asam
 
-# Pre-check: ensure ASAM exists
-ExecStartPre=/bin/test -f /root/Desktop/ASAM/ASAM.exe
-
-# Main launcher
-ExecStart=/root/asam-linux-installer/asam_systemd_launcher.sh
+# Launcher script
+ExecStart=/opt/asam-linux-installer/asam_systemd_launcher.sh
 
 # Restart policy
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 
-# Working directory
-WorkingDirectory=/root/asam-linux-installer
-
-# Increase file limits for Wine stability
-LimitNOFILE=4096
+# Environment for Wine
+Environment=WINEDEBUG=-all
+Environment=WINEPREFIX=/opt/asam-wine-prefix
 
 # Logging
-StandardOutput=journal
-StandardError=journal
+StandardOutput=append:/var/log/asam_launcher.log
+StandardError=append:/var/log/asam_launcher.log
+
+# Ensure Wine has access to a display if needed
+Environment=DISPLAY=:0
 
 [Install]
 WantedBy=multi-user.target

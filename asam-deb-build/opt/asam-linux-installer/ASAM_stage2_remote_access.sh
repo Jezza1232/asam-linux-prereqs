@@ -1,48 +1,92 @@
 #!/bin/bash
-source ./common_env.sh
+set -e
 
-# ============================================================
-# ASAM Linux Auto Installer - Stage 2 (Remote Access Setup)
-# ============================================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-require_root
+LOG="/var/log/asam_stage2.log"
 
-zenity --info \
-    --title="ASAM Installer - Stage 2" \
-    --width=420 \
-    --text="Stage 2 will configure remote access:\n\n• Install and enable SSH\n• Ensure XRDP is running\n\nClick OK to continue."
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | sudo tee -a "$LOG" >/dev/null
+}
 
-(
-    echo "10"
-    echo "# Installing OpenSSH server..."
-    apt install -y openssh-server >/dev/null 2>&1
+log "=== Starting ASAM Stage 2 ==="
 
-    echo "40"
-    echo "# Enabling SSH service..."
-    systemctl enable --now ssh >/dev/null 2>&1
+# -----------------------------
+# Validate required commands
+# -----------------------------
+need_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        zenity --error --title="ASAM Stage 2" \
+            --text="Required command '$1' is missing.\nInstall it and try again."
+        log "Missing command: $1"
+        exit 1
+    fi
+}
 
-    echo "70"
-    echo "# Ensuring XRDP service is running..."
-    systemctl enable --now xrdp >/dev/null 2>&1
+need_cmd zenity
+need_cmd sudo
+need_cmd systemctl
 
-    echo "100"
-    echo "# Stage 2 complete."
-    sleep 1
-) | zenity --progress \
-    --title="ASAM Installer - Stage 2" \
-    --text="Starting remote access setup..." \
-    --percentage=0 \
-    --width=500 \
-    --auto-close
+# -----------------------------
+# Confirm user wants to proceed
+# -----------------------------
+zenity --question \
+    --title="ASAM Stage 2" \
+    --text="Stage 2 will configure remote access (XRDP + SSH).\n\nProceed?"
 
 if [[ $? -ne 0 ]]; then
-    zenity --error \
-        --title="ASAM Installer" \
-        --text="Stage 2 was cancelled or failed.\n\nPlease check your network connection and try again."
-    exit 1
+    log "User cancelled Stage 2"
+    exit 0
 fi
 
+# -----------------------------
+# Helper: run privileged actions
+# -----------------------------
+run_root() {
+    if ! sudo bash -c "$1"; then
+        zenity --error --title="ASAM Stage 2" \
+            --text="A privileged action failed:\n$1"
+        log "FAILED: $1"
+        exit 1
+    fi
+}
+
+# -----------------------------
+# Enable SSH
+# -----------------------------
+log "Enabling SSH service..."
+run_root "systemctl enable ssh"
+run_root "systemctl restart ssh"
+
+# -----------------------------
+# Enable XRDP
+# -----------------------------
+log "Enabling XRDP service..."
+run_root "systemctl enable xrdp"
+run_root "systemctl restart xrdp"
+
+# -----------------------------
+# Firewall adjustments (optional)
+# -----------------------------
+zenity --question \
+    --title="ASAM Stage 2" \
+    --text="Would you like to automatically open XRDP (3389) and SSH (22) in the firewall?"
+
+if [[ $? -eq 0 ]]; then
+    log "Opening firewall ports for XRDP + SSH"
+    run_root "ufw allow 3389/tcp"
+    run_root "ufw allow 22/tcp"
+else
+    log "User skipped firewall configuration"
+fi
+
+# -----------------------------
+# Completion message
+# -----------------------------
 zenity --info \
-    --title="Stage 2 Complete" \
-    --width=420 \
-    --text="Remote access is now configured.\n\nSSH (port 22) and XRDP (port 3389) are enabled.\n\nClick OK to return to the installer."
+    --title="ASAM Stage 2 Complete" \
+    --text="Stage 2 setup is complete.\nYou may now continue to Stage 3."
+
+log "=== Stage 2 complete ==="
+exit 0

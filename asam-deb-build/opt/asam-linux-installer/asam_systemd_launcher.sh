@@ -1,29 +1,64 @@
 #!/bin/bash
+set -e
 
-# ASAM systemd launcher
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-export WINEPREFIX="/root/.wine"
-export WINEARCH="win64"
-export PATH="/usr/bin:/bin:/usr/sbin:/sbin"
+LOG="/var/log/asam_launcher.log"
 
-LOGFILE="/root/asam_systemd.log"
-echo "Starting ASAM via systemd at $(date)" >> "$LOGFILE"
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG" >/dev/null
+}
 
-# Navigate to ASAM directory
-ASAM_DIR="/root/Desktop/ASAM"
-ASAM_EXE="$ASAM_DIR/ASAM.exe"
+log "=== ASAM systemd launcher starting ==="
 
-if [[ ! -d "$ASAM_DIR" ]]; then
-    echo "ASAM directory not found: $ASAM_DIR" >> "$LOGFILE"
+# -----------------------------
+# Configurable section
+# -----------------------------
+ASAM_WINE_PREFIX="/opt/asam-wine-prefix"
+ASAM_EXE_PATH="/opt/asam/ASAM.exe"   # adjust if needed
+ASAM_WORKDIR="/opt/asam"
+
+# If you want to force a specific user when run from systemd,
+# you should set User= in asam.service instead of here.
+
+# -----------------------------
+# Validate environment
+# -----------------------------
+need_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        log "Missing command: $1"
+        exit 1
+    fi
+}
+
+need_cmd wine64
+
+if [[ ! -f "$ASAM_EXE_PATH" ]]; then
+    log "ASAM executable not found at: $ASAM_EXE_PATH"
     exit 1
 fi
 
-if [[ ! -f "$ASAM_EXE" ]]; then
-    echo "ASAM executable not found: $ASAM_EXE" >> "$LOGFILE"
+if [[ ! -d "$ASAM_WORKDIR" ]]; then
+    log "ASAM working directory not found at: $ASAM_WORKDIR"
     exit 1
 fi
 
-cd "$ASAM_DIR"
+# -----------------------------
+# Launch ASAM via Wine
+# -----------------------------
+export WINEPREFIX="$ASAM_WINE_PREFIX"
 
-# Launch ASAM using Wine64
-/usr/bin/wine64 "$ASAM_EXE" >> "$LOGFILE" 2>&1
+log "Using WINEPREFIX: $WINEPREFIX"
+log "Launching ASAM from: $ASAM_EXE_PATH"
+
+cd "$ASAM_WORKDIR"
+
+# Run in background, keep logs
+nohup wine64 "$ASAM_EXE_PATH" >>"$LOG" 2>&1 &
+
+PID=$!
+log "ASAM launched with PID $PID"
+
+log "=== ASAM systemd launcher exiting (process continues in background) ==="
+exit 0

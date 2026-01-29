@@ -1,102 +1,112 @@
 #!/bin/bash
-source ./common_env.sh
-source ./installer_config.ini
+set -e
 
-# ============================================================
-# ASAM Linux Auto Installer - Stage 3 (Firewall + ASAM Setup)
-# ============================================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-require_root
+LOG="/var/log/asam_stage3.log"
 
-zenity --info \
-    --title="ASAM Installer - Stage 3" \
-    --width=420 \
-    --text="Stage 3 will:\n\n• Configure firewall rules\n• Enable UFW\n• Install Git\n• Create ASAM launchers\n• Optionally enable the ASAM systemd service\n\nClick OK to continue."
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | sudo tee -a "$LOG" >/dev/null
+}
 
-(
-    echo "10"
-    echo "# Configuring firewall rules..."
+log "=== Starting ASAM Stage 3 ==="
 
-    # SSH
-    ufw allow 22/tcp >/dev/null 2>&1
-
-    # XRDP
-    ufw allow 3389/tcp >/dev/null 2>&1
-
-    # ARK ASA ports
-    ufw allow 7777/tcp >/dev/null 2>&1
-    ufw allow 7778/tcp >/dev/null 2>&1
-    ufw allow 27015/tcp >/dev/null 2>&1
-    ufw allow 27020/tcp >/dev/null 2>&1
-
-    # Optional extra port
-    if [[ "$OPEN_EXTRA_PORT" == "yes" ]]; then
-        ufw allow 32330/tcp >/dev/null 2>&1
+# -----------------------------
+# Validate required commands
+# -----------------------------
+need_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        zenity --error --title="ASAM Stage 3" \
+            --text="Required command '$1' is missing.\nInstall it and try again."
+        log "Missing command: $1"
+        exit 1
     fi
+}
 
-    echo "35"
-    echo "# Enabling UFW firewall..."
-    ufw --force enable >/dev/null 2>&1
+need_cmd zenity
+need_cmd sudo
+need_cmd ufw
+need_cmd systemctl
 
-    echo "55"
-    echo "# Installing Git..."
-    apt install -y git >/dev/null 2>&1
-
-    echo "75"
-    echo "# Creating ASAM launcher script..."
-    cp ./asam_run_launcher.sh "$HOME/Desktop/run_asam.sh"
-    chmod +x "$HOME/Desktop/run_asam.sh"
-
-    echo "90"
-    echo "# Creating ASAM desktop shortcut..."
-    DESKTOP_FILE="$HOME/Desktop/ASAM.desktop"
-
-    cat > "$DESKTOP_FILE" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=ASAM
-Comment=ASAM Server Manager (via Wine)
-Exec=$HOME/Desktop/run_asam.sh
-Icon=application-x-wine-extension-exe
-Terminal=false
-Categories=Game;Utility;
-EOF
-
-    chmod +x "$DESKTOP_FILE"
-
-    echo "100"
-    echo "# Stage 3 complete."
-    sleep 1
-) | zenity --progress \
-    --title="ASAM Installer - Stage 3" \
-    --text="Starting firewall and ASAM setup..." \
-    --percentage=0 \
-    --width=500 \
-    --auto-close
+# -----------------------------
+# Confirm user wants to proceed
+# -----------------------------
+zenity --question \
+    --title="ASAM Stage 3" \
+    --text="Stage 3 will configure the firewall and install ASAM prerequisites.\n\nProceed?"
 
 if [[ $? -ne 0 ]]; then
-    zenity --error \
-        --title="ASAM Installer" \
-        --text="Stage 3 was cancelled or failed.\n\nPlease check logs or rerun the installer."
-    exit 1
+    log "User cancelled Stage 3"
+    exit 0
 fi
 
-# ------------------ OPTIONAL SYSTEMD SERVICE ------------------
-if [[ "$ENABLE_SERVICE" == "yes" ]]; then
+# -----------------------------
+# Helper: run privileged actions
+# -----------------------------
+run_root() {
+    if ! sudo bash -c "$1"; then
+        zenity --error --title="ASAM Stage 3" \
+            --text="A privileged action failed:\n$1"
+        log "FAILED: $1"
+        exit 1
+    fi
+}
+
+# -----------------------------
+# Firewall configuration
+# -----------------------------
+log "Configuring firewall rules..."
+
+PORTS=(
+    "27015/tcp"   # Game port
+    "27015/udp"
+    "27016/tcp"   # Query port
+    "27016/udp"
+    "27020/tcp"   # RCON
+    "3389/tcp"    # XRDP
+    "22/tcp"      # SSH
+)
+
+for p in "${PORTS[@]}"; do
+    log "Allowing port $p"
+    run_root "ufw allow $p"
+done
+
+# Enable UFW if disabled
+if sudo ufw status | grep -q "inactive"; then
+    zenity --question \
+        --title="Enable Firewall" \
+        --text="UFW firewall is currently disabled.\nEnable it now?"
+
+    if [[ $? -eq 0 ]]; then
+        log "Enabling UFW firewall"
+        run_root "ufw enable"
+    else
+        log "User declined to enable UFW"
+    fi
+fi
+
+# -----------------------------
+# Install ASAM systemd service
+# -----------------------------
+SERVICE_FILE="$SCRIPT_DIR/asam.service"
+
+if [[ -f "$SERVICE_FILE" ]]; then
     log "Installing ASAM systemd service..."
-
-    cp ./asam.service /etc/systemd/system/asam.service
-    systemctl daemon-reload
-    systemctl enable --now asam.service
-
-    success "ASAM systemd service enabled."
+    run_root "cp '$SERVICE_FILE' /etc/systemd/system/asam.service"
+    run_root "systemctl daemon-reload"
+    run_root "systemctl enable asam.service"
 else
-    warn "ASAM systemd service disabled by user choice."
+    log "asam.service not found — skipping systemd install"
 fi
 
-# ------------------ FINAL GUI MESSAGE ------------------------
+# -----------------------------
+# Completion message
+# -----------------------------
 zenity --info \
-    --title="ASAM Installation Complete" \
-    --width=450 \
-    --text="ASAM installation is complete.\n\nFirewall, SSH, XRDP, and launchers are configured.\n\nYou can now:\n• Connect via RDP or SSH\n• Launch ASAM from your Desktop icon\n• (Optional) ASAM service is running if enabled\n\nThank you for using the ASAM Linux Auto Installer."
+    --title="ASAM Stage 3 Complete" \
+    --text="Stage 3 setup is complete.\nYour system is now ready for ASAM."
+
+log "=== Stage 3 complete ==="
+exit 0
