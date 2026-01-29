@@ -44,12 +44,10 @@ fi
 # -----------------------------
 
 run_root() {
-    # Run a script with sudo, preserving DISPLAY for GUI dialogs
-    # Capture stderr to show error details to user
+    local script_path="$1"
     local output
-    output=$(sudo --preserve-env=DISPLAY,XAUTHORITY bash "$1" 2>&1)
+    output=$( (sudo --preserve-env=DISPLAY,XAUTHORITY bash "$script_path" 2>&1) || true)
     local exitcode=$?
-    
     if [[ $exitcode -ne 0 ]]; then
         zenity --error --title="ASAM Linux Installer" \
             --text="Stage script failed with exit code $exitcode:\n\n$output"
@@ -72,33 +70,18 @@ show_main_menu() {
 }
 
 run_stage1() {
-    local script="$SCRIPT_DIR/ASAM_stage1_main.sh"
-    if [[ ! -x "$script" ]]; then
-        zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 1 script not found or not executable:\n$script"
-        return
-    fi
-    run_root "$script"
+    local repo_dir="$SCRIPT_DIR/asam-linux-prereqs"
+    run_root "$repo_dir/ASAM_stage1_main.sh"
 }
 
 run_stage2() {
-    local script="$SCRIPT_DIR/ASAM_stage2_remote_access.sh"
-    if [[ ! -x "$script" ]]; then
-        zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 2 script not found or not executable:\n$script"
-        return
-    fi
-    run_root "$script"
+    local repo_dir="$SCRIPT_DIR/asam-linux-prereqs"
+    run_root "$repo_dir/ASAM_stage2_remote_access.sh"
 }
 
 run_stage3() {
-    local script="$SCRIPT_DIR/ASAM_stage3_firewall_asam.sh"
-    if [[ ! -x "$script" ]]; then
-        zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 3 script not found or not executable:\n$script"
-        return
-    fi
-    run_root "$script"
+    local repo_dir="$SCRIPT_DIR/asam-linux-prereqs"
+    run_root "$repo_dir/ASAM_stage3_firewall_asam.sh"
 }
 
 # -----------------------------
