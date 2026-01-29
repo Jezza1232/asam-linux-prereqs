@@ -1,0 +1,15 @@
+* text=auto
+
+# Force LF for shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Force LF for other Linux files
+launcher text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files
+*.exe binary
+*.zip binary
