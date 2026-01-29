@@ -32,27 +32,13 @@ need_cmd zenity
 need_cmd git
 
 # -----------------------------
-# Optional: ensure repo folder (no recursion)
-# -----------------------------
-
-if [[ ! -d "$SCRIPT_DIR/asam-linux-prereqs" ]]; then
-    git clone https://github.com/Jezza1232/asam-linux-prereqs.git "$SCRIPT_DIR/asam-linux-prereqs"
-fi
-
-# -----------------------------
 # Helper: run privileged actions
 # -----------------------------
 
 run_root() {
-    # Run a script with sudo, preserving DISPLAY/XAUTHORITY for GUI
-    local cmd="sudo"
-    if [[ -n "$DISPLAY" ]]; then
-        export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
-        cmd="sudo --preserve-env=DISPLAY,XAUTHORITY"
-    fi
-    if ! $cmd bash "$1"; then
+    if ! sudo bash -c "$1"; then
         zenity --error --title="ASAM Linux Installer" \
-            --text="A required privileged action failed:\n\n$1"
+            --text="A privileged action failed:\n\n$1"
         exit 1
     fi
 }
@@ -73,9 +59,9 @@ show_main_menu() {
 
 run_stage1() {
     local script="$SCRIPT_DIR/ASAM_stage1_main.sh"
-    if [[ ! -x "$script" ]]; then
+    if [[ ! -f "$script" ]]; then
         zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 1 script not found or not executable:\n$script"
+            --text="Stage 1 script not found:\n$script"
         return
     fi
     run_root "$script"
@@ -83,9 +69,9 @@ run_stage1() {
 
 run_stage2() {
     local script="$SCRIPT_DIR/ASAM_stage2_remote_access.sh"
-    if [[ ! -x "$script" ]]; then
+    if [[ ! -f "$script" ]]; then
         zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 2 script not found or not executable:\n$script"
+            --text="Stage 2 script not found:\n$script"
         return
     fi
     run_root "$script"
@@ -93,9 +79,9 @@ run_stage2() {
 
 run_stage3() {
     local script="$SCRIPT_DIR/ASAM_stage3_firewall_asam.sh"
-    if [[ ! -x "$script" ]]; then
+    if [[ ! -f "$script" ]]; then
         zenity --error --title="ASAM Linux Installer" \
-            --text="Stage 3 script not found or not executable:\n$script"
+            --text="Stage 3 script not found:\n$script"
         return
     fi
     run_root "$script"
@@ -109,18 +95,10 @@ while true; do
     choice="$(show_main_menu || echo "exit")"
 
     case "$choice" in
-        "stage1")
-            run_stage1
-            ;;
-        "stage2")
-            run_stage2
-            ;;
-        "stage3")
-            run_stage3
-            ;;
-        "exit"|"")
-            exit 0
-            ;;
+        "stage1") run_stage1 ;;
+        "stage2") run_stage2 ;;
+        "stage3") run_stage3 ;;
+        "exit"|"") exit 0 ;;
         *)
             zenity --error --title="ASAM Linux Installer" \
                 --text="Unknown selection: $choice"
