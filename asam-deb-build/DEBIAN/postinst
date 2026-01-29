@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+# Ensure correct permissions for installer files
+chmod -R 755 /opt/asam-linux-installer
+
+# Install systemd service file
+if [ -f /opt/asam-linux-installer/asam.service ]; then
+    cp /opt/asam-linux-installer/asam.service /etc/systemd/system/asam.service
+    systemctl daemon-reload
+fi
+
+# Do NOT enable the service automatically — the installer wizard handles that
+echo "ASAM Installer installed successfully."
+exit 0

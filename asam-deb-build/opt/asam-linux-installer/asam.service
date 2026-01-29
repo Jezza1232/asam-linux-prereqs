@@ -1,0 +1,37 @@
+[Unit]
+Description=ASAM Server Manager (Wine)
+After=network-online.target network.target
+
+[Service]
+Type=simple
+
+# Run as the configured user (wizard sets INSTALL_USER)
+User=root
+
+# Environment for Wine
+Environment="WINEPREFIX=/root/.wine"
+Environment="WINEARCH=win64"
+Environment="PATH=/usr/bin:/bin:/usr/sbin:/sbin"
+
+# Pre-check: ensure ASAM exists
+ExecStartPre=/bin/test -f /root/Desktop/ASAM/ASAM.exe
+
+# Main launcher
+ExecStart=/root/asam-linux-installer/asam_systemd_launcher.sh
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Working directory
+WorkingDirectory=/root/asam-linux-installer
+
+# Increase file limits for Wine stability
+LimitNOFILE=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

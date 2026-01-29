@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+# Remove systemd service if it exists
+if [ -f /etc/systemd/system/asam.service ]; then
+    systemctl disable --now asam.service 2>/dev/null || true
+    rm -f /etc/systemd/system/asam.service
+    systemctl daemon-reload
+fi
+
+# Remove global launcher
+rm -f /usr/local/bin/asam-installer
+
+# Remove installer directory
+rm -rf /opt/asam-linux-installer
+
+exit 0

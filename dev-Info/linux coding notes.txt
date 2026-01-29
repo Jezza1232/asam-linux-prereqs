@@ -1,0 +1,96 @@
+🧰 ASAM Auto‑Installer: Linux Command Reference
+A clear breakdown of the commands commonly used to download, install, configure, and run ASAM + ARK servers on Linux.
+
+🌐 System & Package Management
+
+Refreshes the package index so the system knows the latest available packages.
+
+Upgrades all installed packages to their newest versions.
+ auto‑confirms prompts.
+
+Installs required dependencies such as:
+• 	 — download files from URLs
+• 	 — alternative downloader
+• 	 — extract ZIP archives
+• 	 /  — run ASAM’s Windows executable
+• 	 — download ARK server files
+• 	 or  — persistent sessions for servers
+
+📥 Downloading Files
+
+Downloads a file from a URL.
+ follows redirects,  sets the output filename.
+
+Simple, reliable file downloader. Great fallback if curl isn’t installed.
+
+📦 Extracting & Managing Files
+
+Extracts a ZIP archive into a specific directory.
+
+Extracts  archives (if BRAD distributes ASAM this way).
+
+Makes a script or binary executable.
+
+Sets ownership for ASAM or ARK directories.
+
+🏗️ Directory & File Operations
+
+Creates directories, including parent folders if missing.
+
+Copies files or directories recursively.
+
+Moves or renames files.
+
+Deletes files or directories.
+Use carefully in installers.
+
+🍷 Wine / Proton Setup (for ASAM)
+
+Runs ASAM’s Windows executable under Linux.
+
+Initializes Wine and creates the Wine prefix.
+
+Runs ASAM inside an isolated Wine environment.
+
+🧱 SteamCMD (for ARK Server Files)
+
+Downloads or updates ARK server files.
+ ensures file integrity.
+
+🔧 Systemd Service Management
+
+Enables ASAM or ARK to start automatically on boot.
+
+Starts the service immediately.
+
+Shows the service’s current state and logs.
+
+Live‑follows logs for debugging.
+
+🧪 Script Execution
+
+Runs a shell script.
+
+Runs a script in the current shell session (useful for environment variables).
+
+🔐 Permissions & Safety
+
+Runs a command with elevated privileges.
+
+Opens firewall ports for ARK servers or ASAM’s web interface.
+
+🧭 Networking & Diagnostics
+
+Shows listening ports and associated processes.
+
+Modern replacement for netstat.
+
+Tests network connectivity.
+
+Fetches HTTP headers — useful for checking BRAD endpoints.
+
+🧹 Cleanup
+
+Removes unused dependencies.
+
+Clears cached package files
