@@ -34,18 +34,7 @@ This repository contains a **complete, production-ready installer** that transfo
 
 ## 📦 Installation Methods
 
-### Method 1: .deb Package (Recommended)
-
-```bash
-sudo apt install ./asam-linux-installer_1.0.0_amd64.deb
-```
-
-After installation, launch the menu:
-```bash
-asam-installer
-```
-
-### Method 2: From Source (GitHub)
+### Method 1: From Source (GitHub) (Recommended)
 
 ```bash
 git clone https://github.com/Jezza1232/asam-linux-prereqs.git
@@ -53,7 +42,7 @@ cd asam-linux-prereqs/asam-deb-build/opt/asam-linux-installer
 sudo bash asam_gui_menu.sh
 ```
 
-### Method 3: Manual Build (deb from source)
+### Method 2: Manual Build (deb from source)
 
 ```bash
 cd asam-deb-build
@@ -490,3 +479,4 @@ This setup script is provided as-is for the ASAM community.
 For more information on Wine and ASAM, visit:
 - [Wine Project](https://www.winehq.org/)
 - [ASAM GitHub](https://github.com/CSBrad/ASAM)
+
