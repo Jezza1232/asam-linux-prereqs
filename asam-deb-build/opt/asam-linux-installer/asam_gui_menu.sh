@@ -44,8 +44,8 @@ fi
 # -----------------------------
 
 run_root() {
-    # Run a command with sudo, showing a friendly error if it fails
-    if ! sudo bash -c "$1"; then
+    # Run a script with sudo, showing a friendly error if it fails
+    if ! sudo bash "$1"; then
         zenity --error --title="ASAM Linux Installer" \
             --text="A required privileged action failed:\n\n$1"
         exit 1
