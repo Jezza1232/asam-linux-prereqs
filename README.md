@@ -39,7 +39,7 @@ This repository contains a **complete, production-ready installer** that transfo
 ```bash
 git clone https://github.com/Jezza1232/asam-linux-prereqs.git
 cd asam-linux-prereqs/asam-deb-build/opt/asam-linux-installer
-sudo bash asam_gui_menu.sh
+bash asam_gui_menu.sh
 ```
 
 ### Method 2: Manual Build (deb from source)
@@ -479,4 +479,5 @@ This setup script is provided as-is for the ASAM community.
 For more information on Wine and ASAM, visit:
 - [Wine Project](https://www.winehq.org/)
 - [ASAM GitHub](https://github.com/CSBrad/ASAM)
+
 
