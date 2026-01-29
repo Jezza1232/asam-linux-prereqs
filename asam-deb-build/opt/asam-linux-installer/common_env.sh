@@ -95,7 +95,13 @@ advanced_options_menu() {
 require_root() {
     if [[ $EUID -ne 0 ]]; then
         warn "Root required. Requesting sudo..."
-        exec sudo bash "$0" "$@"
+        # Preserve GUI environment so zenity can open under sudo
+        if [[ -n "$DISPLAY" ]]; then
+            export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+            exec sudo --preserve-env=DISPLAY,XAUTHORITY bash "$0" "$@"
+        else
+            exec sudo bash "$0" "$@"
+        fi
     fi
 }
 
