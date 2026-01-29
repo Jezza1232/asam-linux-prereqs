@@ -92,7 +92,7 @@ run_cmd "ufw allow 25015" "Allow port 25015"
 
 # Clean and initialize Wine prefix
 log "====== Step 6: Setting up Wine Environment ======"
-run_cmd "wineserver -k" "Kill existing Wine servers"
+run_cmd "wineserver -k 2>/dev/null || true" "Kill existing Wine servers (if any)"
 run_cmd "rm -rf ~/.wine" "Remove old Wine prefix"
 run_cmd "WINEARCH=win64 WINEPREFIX=~/.wine wineboot --init" "Initialize 64-bit Wine prefix"
 
@@ -112,7 +112,7 @@ REGEOF
 
 run_cmd "WINEPREFIX=\"$HOME/.wine\" wine regedit /S /tmp/wine_x11_gamma.reg" "Apply Wine registry settings"
 run_cmd "rm -f /tmp/wine_x11_gamma.reg" "Clean up temporary registry file"
-run_cmd "wineserver -k" "Reset Wine servers"
+run_cmd "wineserver -k 2>/dev/null || true" "Reset Wine servers (if running)"
 
 # Download and setup ASAM
 log "====== Step 9: Downloading ASAM ======"
