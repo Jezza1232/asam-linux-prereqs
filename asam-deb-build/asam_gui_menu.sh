@@ -36,7 +36,7 @@ need_cmd git
 # -----------------------------
 
 run_root() {
-    if ! sudo bash "$1"; then
+    if ! sudo bash -c "$1"; then
         zenity --error --title="ASAM Linux Installer" \
             --text="A privileged action failed:\n\n$1"
         exit 1
