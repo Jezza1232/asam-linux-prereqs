@@ -182,6 +182,70 @@ DESKTOPEOF
 chmod +x "$DESKTOP_SHORTCUT"
 log "✓ Created desktop shortcut: $DESKTOP_SHORTCUT"
 
+# ASAM Download Options
+log ""
+log "====== Step 13: ASAM Download Options ======"
+log ""
+log "Choose how to get ASAM:"
+log "  1) Auto-download from GitHub (requires git)"
+log "  2) Manual download - open browser (you'll download manually)"
+log ""
+
+# Prompt user for choice
+read -p "Enter your choice (1 or 2): " choice
+
+case $choice in
+    1)
+        log "Auto-downloading ASAM from GitHub..."
+        ASAM_GIT_URL="https://github.com/CSBrad/ASAM.git"
+        ASAM_CLONE_DIR="$HOME/Desktop/ASAM-repo"
+        
+        if command -v git &> /dev/null; then
+            log "Git found. Cloning ASAM repository..."
+            if git clone "$ASAM_GIT_URL" "$ASAM_CLONE_DIR" >> "$LOG_FILE" 2>&1; then
+                log "✓ ASAM repository cloned successfully to: $ASAM_CLONE_DIR"
+                log "You can now run ASAM from: $ASAM_CLONE_DIR"
+            else
+                log "Warning: Failed to clone ASAM. You can clone manually from: $ASAM_GIT_URL"
+            fi
+        else
+            log "Warning: Git not installed. Installing git..."
+            run_cmd "apt install -y git" "Install git"
+            log "Git installed. Cloning ASAM repository..."
+            if git clone "$ASAM_GIT_URL" "$ASAM_CLONE_DIR" >> "$LOG_FILE" 2>&1; then
+                log "✓ ASAM repository cloned successfully to: $ASAM_CLONE_DIR"
+                log "You can now run ASAM from: $ASAM_CLONE_DIR"
+            else
+                log "Warning: Failed to clone ASAM. You can clone manually from: $ASAM_GIT_URL"
+            fi
+        fi
+        ;;
+    2)
+        log "Opening browser for manual download..."
+        ASAM_REPO_URL="https://github.com/CSBrad/ASAM"
+        
+        # Try to open browser with xdg-open (Linux standard)
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "$ASAM_REPO_URL" 2>/dev/null &
+            log "✓ Browser opened to: $ASAM_REPO_URL"
+        elif command -v x-www-browser &> /dev/null; then
+            x-www-browser "$ASAM_REPO_URL" 2>/dev/null &
+            log "✓ Browser opened to: $ASAM_REPO_URL"
+        else
+            log "Warning: Could not open browser. Please manually visit: $ASAM_REPO_URL"
+        fi
+        
+        log ""
+        log "Browser should now be open. Download ASAM and extract to: $HOME/Desktop/ASAM"
+        log "Then you can run: $LAUNCHER_SCRIPT_DESKTOP"
+        sleep 3
+        ;;
+    *)
+        log "Invalid choice. Skipping ASAM download."
+        log "You can manually download from: https://github.com/CSBrad/ASAM"
+        ;;
+esac
+
 # Final summary
 log ""
 log "====== ASAM Ubuntu Setup Completed Successfully ======"
@@ -190,14 +254,16 @@ log ""
 log "Summary:"
 log "  - XRDP installed and running on port 3389"
 log "  - Wine 64-bit configured with .NET 4.8"
-log "  - ASAM installed to: $ASAM_DIR"
-log "  - Launcher script: $LAUNCHER_SCRIPT_DESKTOP"
-log "  - Launcher script: $LAUNCHER_SCRIPT_ROOT"
+log "  - Launcher scripts created"
 log "  - Desktop shortcut created"
+log "  - ASAM download options presented"
 log ""
-log "To run ASAM:"
-log "  $LAUNCHER_SCRIPT_DESKTOP"
-log "  or click the desktop shortcut: ASAM.desktop"
+log "Next Steps:"
+log "  1. Download/Install ASAM (if not auto-downloaded)"
+log "  2. Extract to: $HOME/Desktop/ASAM"
+log "  3. Run ASAM using:"
+log "     $LAUNCHER_SCRIPT_DESKTOP"
+log "     or click the desktop shortcut: ASAM.desktop"
 log ""
 log "Full setup log: $LOG_FILE"
 log "====== End of Setup ======"
